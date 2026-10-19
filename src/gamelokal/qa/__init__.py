@@ -1,0 +1,1 @@
+"""Bagian dari gamelokal."""

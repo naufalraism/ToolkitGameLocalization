@@ -1,0 +1,11 @@
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+dist/
+build/
+# File asli game tidak boleh masuk repo
+*.pak
+*.db
+!tests/**/*.db
+work.csv
