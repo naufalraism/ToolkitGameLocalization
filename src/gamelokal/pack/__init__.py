@@ -1,8 +1,5 @@
-"""Pembuatan patch.
+"""Pembuatan patch: salinan database terjemahan dan pengemasan .pak."""
+from .dbpatch import write_translated_copy
+from .pak import PakError, build_pak, read_pak
 
-Saat ini hanya menghasilkan berkas .db yang sudah diterjemahkan (lihat core.store.write_patch).
-Pengemasan ke .pak bergantung pada game dan alatnya, dan akan ditambahkan per adapter.
-"""
-from ..core.store import write_patch
-
-__all__ = ["write_patch"]
+__all__ = ["write_translated_copy", "PakError", "build_pak", "read_pak"]

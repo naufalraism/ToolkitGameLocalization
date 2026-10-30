@@ -1,39 +1,34 @@
-import sqlite3
-
 import pytest
 
-from gamelokal.core.store import guess_columns, inspect_db, load_entries, write_patch
+from gamelokal.core.store import StoreError, guess_columns, inspect_db, iter_rows
 
 
-def test_inspect(db):
-    (t,) = inspect_db(db)
-    assert t.name == "lang" and t.rows == 5
-    assert [c.name for c in t.columns] == ["Id", "Content", "Flag"]
+def test_inspect(game_db):
+    (t,) = inspect_db(game_db)
+    assert t.name == "MultiText" and t.rows == 7
+    assert [c.name for c in t.columns] == ["Id", "Content", "RedirectDbIndex"]
 
 
-def test_guess_columns(db):
-    g = guess_columns(db)
-    assert (g.table, g.id_col, g.text_col) == ("lang", "Id", "Content")
+def test_guess_columns(game_db):
+    g = guess_columns(game_db)
+    assert (g.table, g.id_col, g.text_col) == ("MultiText", "Id", "Content")
 
 
-def test_load_entries_ids_are_strings(db):
-    rows = list(load_entries(db, "lang", "Id", "Content"))
-    assert rows[1] == ("2", "Rover")
+def test_iter_rows_skips_blank_and_null(game_db):
+    rows = list(iter_rows(game_db, "MultiText", "Id", "Content"))
+    assert len(rows) == 5 and rows[1] == ("Intro_002", "Rover", "")
 
 
-def test_write_patch_roundtrip_with_integer_ids(db, tmp_path):
-    out = tmp_path / "patched.db"
-    n = write_patch(db, out, "lang", "Id", "Content", {"2": "Rover ID", "999": "tidak ada"})
-    assert n == 1
-    con = sqlite3.connect(out)
-    assert con.execute("select Content from lang where Id=2").fetchone()[0] == "Rover ID"
-    assert con.execute("select Content from lang where Id=3").fetchone()[0] == "Hello"
-    con.close()
-    con = sqlite3.connect(db)  # sumber tidak berubah
-    assert con.execute("select Content from lang where Id=2").fetchone()[0] == "Rover"
-    con.close()
+def test_iter_rows_where_and_errors(game_db):
+    assert len(list(iter_rows(game_db, "MultiText", "Id", "Content", where="Id like 'Quest%'"))) == 2
+    with pytest.raises(StoreError):
+        list(iter_rows(game_db, "Nope", "Id", "Content"))
+    with pytest.raises(StoreError):
+        list(iter_rows(game_db, "MultiText", "Id", "Nope"))
 
 
-def test_write_patch_refuses_same_file(db):
-    with pytest.raises(ValueError):
-        write_patch(db, db, "lang", "Id", "Content", {})
+def test_not_sqlite(tmp_path):
+    bad = tmp_path / "x.db"
+    bad.write_bytes(b"bukan sqlite" * 50)
+    with pytest.raises(StoreError):
+        inspect_db(bad)

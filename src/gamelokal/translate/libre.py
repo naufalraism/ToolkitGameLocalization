@@ -1,44 +1,40 @@
-"""Penyedia LibreTranslate (gratis, bisa dijalankan sendiri)."""
+"""LibreTranslate (gratis, bisa dijalankan sendiri)."""
 from __future__ import annotations
 
-import json
-import time
-import urllib.error
-import urllib.request
+import os
 
-from .base import ProviderError
+from .base import ConnectionFailed, ProviderError, ServerDown
+from .http import http_json
 
 
 class LibreTranslate:
-    name = "libretranslate"
+    name = label = "libre"
+    default_batch = 1
+    default_delay = 0.0
 
-    def __init__(self, url: str = "http://localhost:5000", api_key: str | None = None, timeout: int = 30, retries: int = 2):
-        self.url, self.api_key, self.timeout, self.retries = url.rstrip("/"), api_key, timeout, retries
+    def __init__(self, url: str | None = None, key: str | None = None, timeout: float = 60):
+        self.url = (url or os.environ.get("LIBRETRANSLATE_URL") or "http://localhost:5000").rstrip("/")
+        self.key = key or os.environ.get("LIBRETRANSLATE_KEY")
+        self.timeout = timeout
 
     def _post(self, payload: dict) -> dict:
-        if self.api_key:
-            payload = {**payload, "api_key": self.api_key}
-        req = urllib.request.Request(
-            self.url + "/translate", data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"})
-        last: Exception | None = None
-        for attempt in range(self.retries + 1):
-            try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as r:
-                    return json.loads(r.read().decode("utf-8"))
-            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
-                last = e
-                time.sleep(0.5 * (attempt + 1))
-        raise ProviderError(f"LibreTranslate tidak bisa dihubungi di {self.url}: {last}")
+        if self.key:
+            payload = {**payload, "api_key": self.key}
+        try:
+            return http_json(self.url + "/translate", payload, self.timeout)
+        except ConnectionFailed:
+            raise ServerDown(f"tidak bisa menghubungi LibreTranslate di {self.url}. Pastikan server LibreTranslate "
+                             "sedang berjalan, atau tentukan alamatnya dengan --url.") from None
 
     def translate(self, texts: list[str], source: str, target: str) -> list[str]:
+        code = lambda c: "zh" if c == "zh-CN" else c
         out = []
         for t in texts:
             if not t.strip():
                 out.append(t)
                 continue
-            data = self._post({"q": t, "source": source, "target": target, "format": "text"})
+            data = self._post({"q": t, "source": code(source), "target": code(target), "format": "text"})
             if "translatedText" not in data:
-                raise ProviderError(f"Balasan tidak dikenal: {data}")
+                raise ProviderError(f"balasan tidak dikenal: {data}")
             out.append(data["translatedText"])
         return out

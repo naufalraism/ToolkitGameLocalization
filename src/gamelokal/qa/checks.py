@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Iterable, Sequence
 
 from ..core.glossary import Term
-from ..core.text import placeholders
+from ..core.text import LEFTOVER, placeholders, tags_balanced
 
 
 @dataclass(frozen=True)
@@ -30,6 +30,10 @@ def check_entry(id_: str, source: str, target: str, glossary: Sequence[Term] = (
         if b - a:
             parts.append("berlebih: " + " ".join((b - a).elements()))
         out.append(Issue(id_, "placeholder", "error", "; ".join(parts)))
+    if LEFTOVER.search(target):
+        out.append(Issue(id_, "sisa_penanda", "error", "sisa kode sementara \u27e6n\u27e7 di terjemahan"))
+    if tags_balanced(source) and not tags_balanced(target):
+        out.append(Issue(id_, "urutan_tag", "error", "urutan tag pembuka/penutup salah"))
     s = source.strip()
     if target.strip() == s and len(s) > 3 and any(c.isalpha() for c in s):
         out.append(Issue(id_, "sama_dengan_sumber", "warning", "terjemahan identik dengan sumber"))

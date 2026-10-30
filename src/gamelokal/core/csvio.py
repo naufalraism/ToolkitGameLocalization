@@ -2,7 +2,7 @@
 import csv
 from pathlib import Path
 
-FIELDS = ["id", "source", "target", "note"]
+FIELDS = ["id", "source", "target", "status"]
 
 
 def read_rows(path) -> list[dict]:

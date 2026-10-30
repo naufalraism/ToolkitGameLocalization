@@ -1,22 +1,32 @@
 """Penerjemah mesin."""
-from .base import Provider, ProviderError, mask, translate_safe, unmask
+from .base import (ConnectionFailed, Provider, ProviderError, RateLimited, ServerDown, mask,
+                   translate_safe, unmask)
+from .claude import DEFAULT_MODEL, Claude
 from .libre import LibreTranslate
+from .mymemory import MyMemory
 
 
 class Echo:
-    """Mengembalikan teks apa adanya. Untuk uji alur kerja tanpa jaringan."""
-    name = "echo"
+    """Mengembalikan teks apa adanya. Untuk menguji alur kerja tanpa jaringan."""
+    name = label = "echo"
+    default_batch = 20
+    default_delay = 0.0
 
     def translate(self, texts, source, target):
         return list(texts)
 
 
-def get_provider(name: str, url: str | None = None, api_key: str | None = None):
+def get_provider(name: str, url=None, key=None, email=None, model: str = DEFAULT_MODEL, glossary=()):
     if name == "libre":
-        return LibreTranslate(url or "http://localhost:5000", api_key)
+        return LibreTranslate(url, key)
+    if name == "mymemory":
+        return MyMemory(email)
+    if name == "claude":
+        return Claude(key, model, glossary)
     if name == "echo":
         return Echo()
-    raise ProviderError(f"Penyedia tidak dikenal: {name}")
+    raise ProviderError(f"penyedia tidak dikenal: {name}")
 
 
-__all__ = ["Provider", "ProviderError", "mask", "unmask", "translate_safe", "LibreTranslate", "Echo", "get_provider"]
+__all__ = ["Provider", "ProviderError", "RateLimited", "ServerDown", "ConnectionFailed", "mask", "unmask",
+           "translate_safe", "LibreTranslate", "MyMemory", "Claude", "Echo", "DEFAULT_MODEL", "get_provider"]

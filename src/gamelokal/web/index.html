@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gamelokal</title>
+<style>
+:root{--bg:#F3F5F8;--sf:#fff;--ink:#1B2430;--mut:#5B6776;--line:#D9DEE6;--acc:#1F6FEB;--accx:#fff;--tag:#6F42C1;--tagbg:#EFE8FB;--new:#8A94A3;--mt:#A8700F;--ed:#1F6FEB;--ap:#1A7F4B;--bad:#C62828;--badbg:#FDECEC;--warn:#8A5A00;--warnbg:#FFF4DB;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#141A23;--sf:#1C2430;--ink:#E6EBF2;--mut:#98A4B5;--line:#2C3747;--acc:#5B9DFF;--accx:#0B1220;--tag:#C3A6FF;--tagbg:#2B2147;--new:#7B8696;--mt:#C98A1E;--ed:#3D86F0;--ap:#2F9E6A;--bad:#FF8A8A;--badbg:#3A1D22;--warn:#F0B84A;--warnbg:#3A2C0C}}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 16px;background:var(--sf);border-bottom:1px solid var(--line)}
+.logo{font-weight:800;font-size:17px;letter-spacing:-.01em}
+.bar{flex:1;height:10px;min-width:80px;display:flex;overflow:hidden;border-radius:6px;background:var(--line)}
+.bar i{display:block;height:100%}
+.bar .ap{background:var(--ap)}.bar .ed{background:var(--ed)}.bar .mt{background:var(--mt)}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(300px,400px) 1fr}
+#left{display:flex;flex-direction:column;min-height:0;background:var(--sf);border-right:1px solid var(--line)}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+.filters>*{min-width:0;width:100%}
+.filters #q{grid-column:1/-1}
+input,select,textarea,button{font:inherit;color:var(--ink)}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+button{cursor:pointer;font-weight:600;background:var(--sf);border:1px solid var(--line);border-radius:8px;padding:7px 14px}
+button.primary{background:var(--acc);border-color:var(--acc);color:var(--accx)}
+:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+#list{flex:1;margin:0;padding:0;overflow:auto;list-style:none}
+#list li{padding:9px 14px;border-bottom:1px solid var(--line);border-left:4px solid var(--new);cursor:pointer}
+#list li.mt{border-left-color:var(--mt)}#list li.edited{border-left-color:var(--ed)}#list li.approved{border-left-color:var(--ap)}
+#list li.sel{background:var(--bg)}
+#list p{margin:2px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.muted{color:var(--mut);font-size:13px}
+.err{color:var(--bad);font-weight:700}
+#more{margin:10px 14px}
+#right{overflow:auto;min-height:0;padding:20px 24px}
+.lab{display:block;margin:14px 0 6px;font-weight:700}
+.box{padding:12px 14px;white-space:pre-wrap;word-break:break-word;background:var(--sf);border:1px solid var(--line);border-radius:10px}
+.tag{padding:0 3px;border-radius:4px;font-weight:600;color:var(--tag);background:var(--tagbg)}
+#tg{width:100%;min-height:130px;resize:vertical;font-size:16px}
+#chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#chips button{padding:1px 9px;color:var(--tag);background:var(--tagbg);border-color:transparent}
+#chips button.miss{outline:2px solid var(--bad)}
+.meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{padding:1px 10px;border-radius:99px;font-size:12px;font-weight:700;color:#fff;background:var(--new)}
+.pill.mt{background:var(--mt)}.pill.edited{background:var(--ed)}.pill.approved{background:var(--ap)}
+#iss{margin:8px 0;padding:0;list-style:none}
+#iss li{margin-bottom:6px;padding:6px 10px;border-radius:8px}
+.sev-error{color:var(--bad);background:var(--badbg)}.sev-warning{color:var(--warn);background:var(--warnbg)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+#hist{margin:0;padding:0;list-style:none}
+#hist li{padding:8px 0;border-top:1px solid var(--line)}
+#hist .tx{white-space:pre-wrap;word-break:break-word}
+#toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);padding:8px 16px;border-radius:8px;color:var(--bg);background:var(--ink);opacity:0;pointer-events:none}
+#toast.on{opacity:1}#toast.bad{background:var(--bad);color:#fff}
+@media(max-width:800px){body{height:auto;min-height:100vh}main{display:block}#left{border-right:0;border-bottom:1px solid var(--line)}#list{max-height:46vh}#right{overflow:visible;padding:16px}#pct{flex-basis:100%}.bar{order:2}}
+@media(prefers-reduced-motion:no-preference){.bar i{transition:width .4s}}
+.tabs{display:flex;gap:6px;padding:12px 12px 0}
+.tabs button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--accx)}
+#qa{display:flex;flex-direction:column;gap:8px;padding:12px}
+.code{padding:0 8px;border-radius:99px;font-size:12px;font-weight:700;background:var(--line)}
+#list li.err{border-left-color:var(--bad)}#list li.wrn{border-left-color:var(--warn)}
+#conf{margin:10px 0;padding:12px 14px;border-radius:10px;border:2px solid var(--warn);background:var(--warnbg)}
+#sug{margin:8px 0}
+.who{font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">gamelokal</span>
+  <select id="ds" aria-label="Dataset"></select>
+  <div class="bar" id="bar" role="img" aria-label="Progres terjemahan"></div>
+  <span class="muted" id="pct"></span>
+  <span class="muted" id="me"></span>
+</header>
+<main>
+  <section id="left" aria-label="Daftar entri">
+    <div class="tabs"><button id="tabE" aria-pressed="true">Entri</button><button id="tabQ" aria-pressed="false">Laporan QA</button></div>
+    <div class="filters" id="fil">
+      <input id="q" type="search" placeholder="Cari teks, ID, atau pembicara" aria-label="Cari">
+      <select id="in" aria-label="Cari di"><option value="all">Cari di semua</option><option value="source">Teks asli</option><option value="target">Terjemahan</option><option value="id">ID</option></select>
+      <select id="st" aria-label="Status"><option value="">Semua status</option><option value="untranslated">Belum diterjemahkan</option><option value="mt">Mesin</option><option value="edited">Disunting</option><option value="approved">Disetujui</option></select>
+      <input id="px" placeholder="Awalan ID" title="Awalan ID, misalnya Quest_" aria-label="Awalan ID">
+    </div>
+    <div id="qa" hidden><select id="qcode" aria-label="Jenis masalah"><option value="">Semua masalah</option></select><span class="muted" id="qsum"></span></div>
+    <div class="muted" id="count" style="padding:0 14px 8px"></div>
+    <ul id="list"></ul>
+    <button id="more" hidden>Muat lagi</button>
+  </section>
+  <section id="right" aria-label="Penyunting">
+    <p class="muted" id="empty">Pilih satu baris di sebelah kiri untuk mulai menyunting.</p>
+    <div id="ed" hidden>
+      <div class="meta"><strong id="eid"></strong><span class="muted" id="spk"></span><span class="pill" id="stt"></span><span class="who" id="who"></span></div>
+      <span class="lab">Teks asli</span>
+      <div class="box" id="src"></div>
+      <div id="chips" aria-label="Tag dari teks asli"></div>
+      <label class="lab" for="tg">Terjemahan</label>
+      <textarea id="tg"></textarea>
+      <div id="sug" class="box" hidden></div>
+      <ul id="iss"></ul>
+      <div id="conf" hidden></div>
+      <div class="actions">
+        <button id="save">Simpan</button>
+        <button id="mt" hidden>Saran mesin</button>
+        <button id="appr" class="primary">Simpan dan setujui</button>
+        <span class="muted">Ctrl+Enter menyimpan. Ctrl+Shift+Enter menyetujui dan lanjut ke baris berikutnya.</span>
+      </div>
+      <span class="lab">Riwayat</span>
+      <ol id="hist"></ol>
+    </div>
+  </section>
+</main>
+<div id="toast" role="status"></div>
+<script>
+const TOKEN = new URLSearchParams(location.search).get("token") || "";
+const PH = /\{[^{}]*\}|<[^<>]+>|%[-+0-9.]*[sdif]|\\n|\[[A-Za-z_]+:[^\]]*\]/g;
+const LABEL = {new: "belum", mt: "mesin", edited: "disunting", approved: "disetujui"};
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const S = {name: "", offset: 0, total: 0, cur: null, saved: ""};
+
+async function api(path, body) {
+  const o = {headers: {"X-Token": TOKEN}};
+  if (body) { o.method = "POST"; o.headers["Content-Type"] = "application/json"; o.headers["X-Gamelokal"] = "1"; o.body = JSON.stringify(body); }
+  const r = await fetch(path, o);
+  const j = await r.json().catch(() => ({error: "Balasan server tidak terbaca"}));
+  if (!r.ok) { const e = new Error(r.status === 401 ? "Token salah. Buka tautan pribadimu atau alamat lengkap dari terminal, termasuk ?token=..." : (j.error || "HTTP " + r.status)); e.status = r.status; e.data = j; throw e; }
+  return j;
+}
+let tt;
+function toast(msg, bad) { const t = $("toast"); t.textContent = msg; t.className = "on" + (bad ? " bad" : ""); clearTimeout(tt); tt = setTimeout(() => t.className = "", 2600); }
+function hl(s) { let o = "", p = 0; for (const m of s.matchAll(PH)) { o += esc(s.slice(p, m.index)) + '<span class="tag">' + esc(m[0]) + "</span>"; p = m.index + m[0].length; } return o + esc(s.slice(p)); }
+const count = (s, t) => s.split(t).length - 1;
+
+async function loadStats() {
+  const s = await api("/api/stats?name=" + encodeURIComponent(S.name));
+  const ds = $("ds");
+  if (!ds.options.length) { s.datasets.forEach(n => ds.add(new Option(n, n))); S.name = S.name || ds.value; }
+  const t = s.total || 1, b = s.by_status;
+  $("bar").innerHTML = ["ap:approved", "ed:edited", "mt:mt"].map(x => { const [c, k] = x.split(":"); return `<i class="${c}" style="width:${b[k] / t * 100}%" title="${LABEL[k]}: ${b[k]}"></i>`; }).join("");
+  const pc = (s.total - s.untranslated) / t * 100;
+  $("pct").textContent = `${pc < 10 ? pc.toFixed(1) : Math.round(pc)}% punya terjemahan, ${b.approved} disetujui dari ${s.total}`;
+  $("me").textContent = s.user ? "Masuk sebagai " + s.user : "";
+  $("mt").hidden = !s.mt; if (s.mt) $("mt").textContent = "Saran mesin (" + s.mt + ")";
+}
+function row(r) {
+  const li = document.createElement("li");
+  li.dataset.id = r.id; li.className = r.status + (r.id === S.cur ? " sel" : "");
+  li.innerHTML = `<div class="muted">${esc(r.id.slice(r.id.indexOf(":") + 1))}${r.err ? ' <span class="err">tag bermasalah</span>' : ""}</div><p>${esc(r.source)}</p>` + (r.target ? `<p class="muted">${esc(r.target)}</p>` : "");
+  li.onclick = () => openEntry(r.id);
+  return li;
+}
+async function loadList(reset) {
+  if (reset) { S.offset = 0; $("list").innerHTML = ""; }
+  const p = new URLSearchParams({q: $("q").value, in: $("in").value, status: $("st").value, prefix: $("px").value, name: S.name, limit: 50, offset: S.offset});
+  try {
+    const j = await api("/api/entries?" + p);
+    j.rows.forEach(r => $("list").appendChild(row(r)));
+    S.offset += j.rows.length; S.total = j.total;
+    $("count").textContent = j.total ? `${S.offset} dari ${j.total} entri` : "Tidak ada entri yang cocok. Ubah kata kunci atau filter.";
+    $("more").hidden = S.offset >= j.total;
+  } catch (e) { toast(e.message, true); }
+}
+const dirty = () => S.cur && $("tg").value !== S.saved;
+function syncChips() {
+  const need = {}; (($("src").dataset.raw.match(PH)) || []).forEach(t => need[t] = (need[t] || 0) + 1);
+  $("chips").innerHTML = ""; const tg = $("tg").value;
+  for (const t in need) { const b = document.createElement("button"); b.textContent = t; if (count(tg, t) < need[t]) b.className = "miss"; b.title = "Sisipkan di kursor"; b.onclick = () => { const a = $("tg"); a.setRangeText(t, a.selectionStart, a.selectionEnd, "end"); a.focus(); syncChips(); }; $("chips").appendChild(b); }
+}
+function show(e) {
+  S.cur = e.id; S.saved = e.target; S.rev = e.rev; $("conf").hidden = true; $("sug").hidden = true;
+  $("empty").hidden = true; $("ed").hidden = false;
+  $("eid").textContent = e.id.slice(e.id.indexOf(":") + 1); $("spk").textContent = e.speaker;
+  $("stt").textContent = LABEL[e.status]; $("stt").className = "pill " + e.status; $("who").textContent = e.editor ? "terakhir oleh " + e.editor : "";
+  $("src").dataset.raw = e.source; $("src").innerHTML = hl(e.source) || '<span class="muted">(tanpa teks asli: terjemahan ini diimpor dari berkas lama)</span>';
+  $("tg").value = e.target; syncChips();
+  $("iss").innerHTML = e.issues.map(i => `<li class="sev-${i.severity}">${esc(i.message)}</li>`).join("");
+  $("hist").innerHTML = e.history.length ? "" : '<li class="muted">Belum ada riwayat.</li>';
+  e.history.slice().reverse().forEach(v => { const li = document.createElement("li"); li.innerHTML = `<div class="muted">Versi ${v.n}, ${new Date(v.ts * 1000).toLocaleString("id-ID")}${v.author ? ", oleh " + esc(v.author) : ""}${v.note ? ", " + esc(v.note) : ""}</div><div class="tx">${esc(v.text)}</div>`; const b = document.createElement("button"); b.textContent = "Kembalikan ke versi ini"; b.onclick = () => revert(v.n); li.appendChild(b); $("hist").appendChild(li); });
+  document.querySelectorAll("#list li").forEach(li => li.classList.toggle("sel", li.dataset.id === e.id));
+}
+async function openEntry(id, force) {
+  if (!force && dirty() && !confirm("Perubahan belum disimpan. Pindah tanpa menyimpan?")) return;
+  try { show(await api("/api/entry?id=" + encodeURIComponent(id))); $("tg").focus({preventScroll: true}); if (matchMedia("(max-width:800px)").matches) $("right").scrollIntoView(); } catch (e) { toast(e.message, true); }
+}
+function refreshRow(e) {
+  const old = [...document.querySelectorAll("#list li")].find(li => li.dataset.id === e.id);
+  if (old) old.replaceWith(row({id: e.id, source: e.source, target: e.target, status: e.status, err: e.issues.some(i => i.severity === "error")}));
+}
+function conflict(cur, retry) {
+  const c = $("conf"); c.hidden = false;
+  c.innerHTML = `<strong>${esc(cur.editor || "Orang lain")} mengubah entri ini setelah kamu membukanya.</strong><div class="box" style="margin:8px 0">${esc(cur.target) || "(kosong)"}</div>`;
+  const a = document.createElement("button"); a.textContent = "Pakai versi mereka"; a.onclick = () => { show(cur); refreshRow(cur); };
+  const b = document.createElement("button"); b.textContent = "Timpa dengan punyaku"; b.className = "primary"; b.onclick = () => { c.hidden = true; S.rev = cur.rev; retry(); };
+  c.append(a, " ", b);
+}
+function fail(e, retry) { e.status === 409 && e.data.current ? conflict(e.data.current, retry) : toast(e.message, true); }
+async function save(approve, next) {
+  if (!S.cur) return;
+  try {
+    const e = await api("/api/save", {id: S.cur, text: $("tg").value, approve, base: S.rev});
+    show(e); refreshRow(e); loadStats(); toast(approve ? "Disetujui" : "Tersimpan");
+    if (next) { const li = document.querySelector("#list li.sel"); const n = li && li.nextElementSibling; if (n) openEntry(n.dataset.id, true); }
+  } catch (e) { fail(e, () => save(approve, next)); }
+}
+async function revert(n) {
+  if (dirty() && !confirm("Teks yang sedang kamu ketik akan diganti. Lanjutkan?")) return;
+  try { const e = await api("/api/revert", {id: S.cur, version: n, base: S.rev}); show(e); refreshRow(e); loadStats(); toast("Dikembalikan ke versi " + n); } catch (e) { fail(e, () => revert(n)); }
+}
+async function loadQA() {
+  $("list").innerHTML = ""; $("more").hidden = true;
+  try {
+    const j = await api("/api/qa?" + new URLSearchParams({name: S.name, code: $("qcode").value}));
+    const sel = $("qcode"), cur = sel.value;
+    sel.innerHTML = '<option value="">Semua masalah</option>' + Object.entries(j.counts).map(([k, n]) => `<option value="${k}">${k} (${n})</option>`).join(""); sel.value = cur;
+    $("qsum").textContent = `${j.errors} error, ${j.warnings} peringatan dari ${j.checked} entri yang diperiksa. ${j.pending} belum diterjemahkan.`;
+    $("count").textContent = j.issues.length ? (j.issues.length >= 1000 ? "Menampilkan 1000 pertama. Persempit dengan jenis masalah." : `${j.issues.length} masalah`) : "Tidak ada masalah yang ditemukan.";
+    j.issues.forEach(i => { const li = document.createElement("li"); li.dataset.id = i.id; li.className = i.severity === "error" ? "err" : "wrn"; li.innerHTML = `<div class="muted">${esc(i.id.slice(i.id.indexOf(":") + 1))} <span class="code">${esc(i.code)}</span></div><p style="white-space:normal">${esc(i.message)}</p>`; li.onclick = () => openEntry(i.id); $("list").appendChild(li); });
+  } catch (e) { toast(e.message, true); }
+}
+function mode(qa) { S.qa = qa; $("tabE").setAttribute("aria-pressed", !qa); $("tabQ").setAttribute("aria-pressed", qa); $("fil").hidden = qa; $("qa").hidden = !qa; qa ? loadQA() : loadList(true); }
+$("tabE").onclick = () => mode(false); $("tabQ").onclick = () => mode(true); $("qcode").onchange = loadQA;
+$("mt").onclick = async () => {
+  if (!S.cur) return; $("mt").disabled = true;
+  try {
+    const j = await api("/api/translate", {id: S.cur}), s = $("sug"); s.hidden = false;
+    s.innerHTML = `<div class="muted">Saran dari ${esc(j.label)}</div><div style="white-space:pre-wrap">${hl(j.text)}</div>` + (j.ok ? "" : `<div class="sev-error" style="margin-top:6px;padding:6px 10px;border-radius:8px">${esc(j.problems.join("; ") || "tag tidak kembali utuh")}. Periksa sebelum dipakai.</div>`);
+    const b = document.createElement("button"); b.textContent = "Pakai saran ini"; b.style.marginTop = "8px"; b.onclick = () => { $("tg").value = j.text; syncChips(); s.hidden = true; $("tg").focus(); }; s.appendChild(b);
+  } catch (e) { toast(e.message, true); } finally { $("mt").disabled = false; }
+};
+let deb;
+const reload = () => { clearTimeout(deb); deb = setTimeout(() => loadList(true), 250); };
+$("q").oninput = reload; $("px").oninput = reload;
+$("in").onchange = $("st").onchange = () => loadList(true);
+$("ds").onchange = async () => { S.name = $("ds").value; await loadStats(); S.qa ? loadQA() : loadList(true); };
+$("more").onclick = () => loadList(false);
+$("save").onclick = () => save(false); $("appr").onclick = () => save(true, true);
+$("tg").oninput = syncChips;
+$("tg").onkeydown = e => { if (e.ctrlKey && e.key === "Enter") { e.preventDefault(); e.shiftKey ? save(true, true) : save(false); } };
+window.onbeforeunload = e => { if (dirty()) { e.preventDefault(); e.returnValue = ""; } };
+(async () => { try { await loadStats(); await loadList(true); } catch (e) { $("empty").textContent = e.message; } })();
+</script>
+</body>
+</html>
