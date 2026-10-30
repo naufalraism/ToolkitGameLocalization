@@ -1,4 +1,4 @@
-# gamelokal
+# Toolkit Game Localization & Translation
 
 English | [Bahasa Indonesia](README.id.md)
 
